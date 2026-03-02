@@ -39,3 +39,31 @@ Automatically assign categories to your WordPress posts using AI (OpenAI or Poll
 4. Go to Tools → AI Category Assigner to configure.
 5. Enter your API key and target categories, then save.
 6. Click "Load All Posts" and then "Assign Categories".
+
+## ⚙️ Configuration
+
+### 1. Access the Plugin
+- Go to **Tools → AI Category Assigner** in your WordPress admin menu
+
+### 2. Enter API Keys
+- **OpenAI API Key:** Required if using GPT-4o Mini or GPT-4.1 Mini
+- **Pollinations.ai API Key:** Required if using Gemini Fast model
+
+### 3. Select AI Model
+Choose your preferred model:
+- **GPT-4o Mini:** OpenAI's cost-effective model
+- **GPT-4.1 Mini:** OpenAI's latest mini model
+- **Gemini Fast:** Google's Gemini 2.5 Flash Lite via Pollinations
+
+> ⚠️ **Important:** Make sure you enter the correct API key for your chosen model!
+
+### 4. Set Assignment Mode
+Choose how you want to assign categories:
+- **All posts:** Process every post, replacing existing categories
+- **Only uncategorized posts:** Only assign categories to posts with no categories
+
+### 5. Define Target Categories
+Enter your categories as a comma-separated list. Example: Technology, Business, Health, Lifestyle, Education, Travel, Food, Sports
+
+### 6. Save Settings
+Click "Save Settings" to store your configuration.
