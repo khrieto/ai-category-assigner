@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AI Category Assigner
  * Plugin URI:  https://github.com/khrieto/ai-category-assigner
- * Description: Automatically assign categories to your wordpress posts using AI (OpenAI or Pollinations). Supports the most cost‑effective models: GPT‑4o Mini, GPT‑4.1 Mini, and Gemini Fast (Google Gemini 2.5 Flash Lite).
+ * Description: Automatically assign categories to your posts using AI (OpenAI or Pollinations). Supports the most cost‑effective models: GPT‑4o Mini, GPT‑4.1 Mini, and Gemini Fast (Google Gemini 2.5 Flash Lite).
  * Version:     2.0
  * Author:      Khrieto Moirangthem
  * Author URI:  https://github.com/khrieto
@@ -23,6 +23,7 @@ class AICategoryAssigner {
     private $pollinations_key;
     private $categories;
     private $model;
+    private $assign_mode;
     
     // Allowed models with provider and display name
     private $allowed_models = array(
@@ -49,20 +50,22 @@ class AICategoryAssigner {
     }
     
     public function enqueue_admin_scripts($hook) {
-        if ($hook != 'tools_page_ai-category-assigner') {
+        if ($hook != 'toplevel_page_ai-category-assigner') {
             return;
         }
         wp_enqueue_script('jquery');
     }
     
     public function add_admin_menu() {
-        add_submenu_page(
-            'tools.php',
-            'AI Category Assigner',
-            'AI Category Assigner',
-            'manage_options',
-            'ai-category-assigner',
-            array($this, 'admin_page_html')
+        // Changed from add_submenu_page to add_menu_page for top-level menu
+        add_menu_page(
+            'AI Category Assigner',           // Page title
+            'AI Category Assigner',           // Menu title
+            'manage_options',                  // Capability required
+            'ai-category-assigner',            // Menu slug
+            array($this, 'admin_page_html'),   // Function to display the page
+            'dashicons-tagcloud',              // Icon (using tag cloud icon - appropriate for categories)
+            80                                  // Position (lower number = higher up)
         );
     }
     
@@ -71,11 +74,13 @@ class AICategoryAssigner {
         register_setting('ai_category_assigner', 'pollinations_api_key');
         register_setting('ai_category_assigner', 'target_categories');
         register_setting('ai_category_assigner', 'ai_model');
+        register_setting('ai_category_assigner', 'assign_mode');
         
         $this->openai_key       = get_option('openai_api_key');
         $this->pollinations_key = get_option('pollinations_api_key');
         $this->categories       = get_option('target_categories');
         $this->model            = get_option('ai_model', 'gpt-4o-mini');
+        $this->assign_mode      = get_option('assign_mode', 'all');
     }
     
     public function admin_page_html() {
@@ -94,7 +99,7 @@ class AICategoryAssigner {
             
             <!-- Cost‑effectiveness note -->
             <div class="notice notice-info">
-                <p><strong>💡 Why these models?</strong> We’ve hand‑picked the most effective and affordable AI models for categorization. Using larger models would be overkill – these three give you the best balance of speed, accuracy, and cost.</p>
+                <p><strong>💡 Why these models?</strong> We've hand‑picked the most effective and affordable AI models for categorization. Using larger models would be overkill – these three give you the best balance of speed, accuracy, and cost.</p>
             </div>
             
             <!-- Settings Form -->
@@ -144,6 +149,28 @@ class AICategoryAssigner {
                                     <?php endforeach; ?>
                                 </select>
                                 <p class="description">Choose the AI model that fits your needs. The API key for the corresponding provider must be entered above.</p>
+                                <p class="description" style="color: #d63638; font-weight: bold; margin-top: 8px;">
+                                    ⚠️ Important: GPT models (OpenAI) require the OpenAI API key; Gemini Fast (Pollinations) requires the Pollinations API key.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="assign_mode">Assignment Mode</label>
+                            </th>
+                            <td>
+                                <fieldset>
+                                    <label>
+                                        <input type="radio" name="assign_mode" value="all" <?php checked($this->assign_mode, 'all'); ?>>
+                                        <strong>All posts</strong> – Assign categories to every post, replacing existing categories.
+                                    </label>
+                                    <br>
+                                    <label>
+                                        <input type="radio" name="assign_mode" value="uncategorized" <?php checked($this->assign_mode, 'uncategorized'); ?>>
+                                        <strong>Only uncategorized posts</strong> – Only assign categories to posts that currently have no categories OR only the default "Uncategorized" category. Posts with other categories will be skipped.
+                                    </label>
+                                </fieldset>
+                                <p class="description">Choose whether to process all posts or only those without meaningful categories.</p>
                             </td>
                         </tr>
                         <tr>
@@ -157,7 +184,7 @@ class AICategoryAssigner {
                                     rows="5" 
                                     class="large-text" 
                                     placeholder="Enter categories separated by commas&#10;Example: Technology, Business, Health, Lifestyle, Education"><?php echo esc_textarea($this->categories); ?></textarea>
-                                <p class="description">Enter the categories you want to assign (comma‑separated). <strong>Case‑insensitive matching</strong> – “technology”, “Technology”, and “TECHNOLOGY” will all match.</p>
+                                <p class="description">Enter the categories you want to assign (comma‑separated). <strong>Case‑insensitive matching</strong> – "technology", "Technology", and "TECHNOLOGY" will all match.</p>
                             </td>
                         </tr>
                     </table>
@@ -173,11 +200,16 @@ class AICategoryAssigner {
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
                     <h3 style="margin-top: 0;">How to Use:</h3>
                     <ol>
-                        <li>Save your settings with the required API key and target categories.</li>
-                        <li>Click “Load All Posts” to see all your published posts.</li>
-                        <li>Click “Assign Categories to All Posts” to process ALL posts at once.</li>
+                        <li>Save your settings with the required API key and target categories. Ensure you use the correct API key for your chosen model (OpenAI for GPT models, Pollinations for Gemini Fast).</li>
+                        <li>Click "Load All Posts" to see all your published posts.</li>
+                        <li>Click "Assign Categories to All Posts" to process ALL posts (or only uncategorized ones, depending on your selected mode).</li>
                         <li>The system processes posts in batches of 10 to avoid API limits.</li>
                     </ol>
+                    <p style="color: #d63638; font-weight: bold; margin-top: 10px; padding: 8px; background: #ffe0e0; border-radius: 4px;">
+                        ⚠️ <strong>WARNING:</strong> Clicking "Assign Categories" will permanently modify your posts. 
+                        Existing categories will be replaced based on your selected mode. This action CANNOT be undone automatically. 
+                        Consider backing up your database before proceeding with large batches.
+                    </p>
                 </div>
                 
                 <div style="margin: 20px 0;">
@@ -315,7 +347,13 @@ class AICategoryAssigner {
                     var selectedModel = $('#ai_model').val();
                     var modelName = modelNames[selectedModel] || selectedModel;
                     
-                    if (!confirm(`🤖 This will assign/replace categories for ALL ${allPosts.length} posts using ${modelName}.\n\n✅ Existing categories will be replaced.\n✅ Posts will be processed in batches of 10.\n✅ This may take several minutes for large sites.\n\nContinue?`)) {
+                    // Enhanced irreversible warning
+                    if (!confirm(`⚠️ IRREVERSIBLE ACTION ⚠️\n\nThis will permanently modify your posts:\n\n• ${allPosts.length} posts will be processed\n• Using: ${modelName}\n• Mode: ${$('input[name="assign_mode"]:checked').next('strong').text() || 'All posts'}\n\n✅ Existing categories WILL BE REPLACED\n✅ This action CANNOT be undone automatically\n✅ Consider backing up your database first\n\nAre you ABSOLUTELY SURE you want to continue?`)) {
+                        return;
+                    }
+                    
+                    // Second confirmation for extra safety
+                    if (!confirm('FINAL WARNING: This will permanently change your post categories. There is NO UNDO. Click OK to proceed or Cancel to abort.')) {
                         return;
                     }
                     
@@ -367,6 +405,12 @@ class AICategoryAssigner {
                                 });
                                 
                                 currentBatch++;
+                                
+                                // Update progress after batch completion
+                                const processed = Math.min(currentBatch * batchSize, allPosts.length);
+                                const newProgress = Math.round((processed / allPosts.length) * 100);
+                                updateProgress(newProgress, currentBatch, Math.ceil(allPosts.length / batchSize));
+                                
                                 setTimeout(processBatch, 500);
                             } else {
                                 $('#loading-spinner').hide();
@@ -469,6 +513,9 @@ class AICategoryAssigner {
             wp_send_json_error('Target categories not set. Please save your settings first.');
         }
         
+        // Get assignment mode
+        $assign_mode = get_option('assign_mode', 'all');
+        
         if (isset($_POST['post_ids']) && is_array($_POST['post_ids'])) {
             $post_ids = array_map('intval', $_POST['post_ids']);
             $posts = get_posts(array(
@@ -490,6 +537,29 @@ class AICategoryAssigner {
         
         if (empty($posts)) {
             wp_send_json_error('No posts found to process.');
+        }
+        
+        // Filter posts based on assignment mode
+        if ($assign_mode === 'uncategorized') {
+            $default_category_id = get_option('default_category'); // Get default Uncategorized category ID
+            $filtered_posts = array();
+            foreach ($posts as $post) {
+                $post_categories = wp_get_post_categories($post->ID);
+                // Include if no categories OR only the default category
+                if (empty($post_categories) || (count($post_categories) === 1 && $post_categories[0] == $default_category_id)) {
+                    $filtered_posts[] = $post;
+                }
+            }
+            $posts = $filtered_posts;
+        }
+        
+        if (empty($posts)) {
+            wp_send_json_success(array(
+                'message' => 'No uncategorized posts to process.',
+                'results' => array(),
+                'model_used' => $model,
+                'processed_count' => 0
+            ));
         }
         
         $results = array();
