@@ -67,3 +67,19 @@ Enter your categories as a comma-separated list. Example: Technology, Business, 
 
 ### 6. Save Settings
 Click "Save Settings" to store your configuration.
+
+## 📝 How to Use
+
+### Step 1: Load Posts
+Click the **"Load All Posts"** button to fetch all your published posts.
+
+### Step 2: Start Categorization
+Click **"Assign Categories to All Posts"** to begin the AI categorization process.
+
+### Step 3: Monitor Progress
+- Watch the progress bar as posts are processed in batches of 10
+- Each post gets updated with its AI-assigned category
+
+### Step 4: Review Results
+- Successfully categorized posts show a green category badge
+- Failed posts show an error message in red
