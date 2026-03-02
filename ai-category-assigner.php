@@ -2,14 +2,13 @@
 /**
  * Plugin Name: AI Category Assigner
  * Plugin URI:  https://github.com/khrieto/ai-category-assigner
- * Description: Automatically assign categories to your wordpress posts using AI (OpenAI or Pollinations). Supports the most cost‑effective models: GPT‑4o Mini, GPT‑4.1 Mini, and Gemini Fast (Google Gemini 2.5 Flash Lite).
+ * Description: Automatically assign categories to WordPress posts using AI-based text analysis via external AI services.
  * Version:     2.0
  * Author:      Khrieto Moirangthem
  * Author URI:  https://github.com/khrieto
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: ai-category-assigner
- * Domain Path: /languages
  */
 
 // Prevent direct access
@@ -29,15 +28,15 @@ class AICategoryAssigner {
     private $allowed_models = array(
         'gpt-4o-mini' => array(
             'provider' => 'openai',
-            'name'     => 'GPT‑4o Mini (OpenAI) – Fast & Cost‑Effective'
+            'name'     => 'GPT-4o Mini (OpenAI)'
         ),
         'gpt-4.1-mini' => array(
             'provider' => 'openai',
-            'name'     => 'GPT‑4.1 Mini (OpenAI) – Latest Mini Model'
+            'name'     => 'GPT-4.1 Mini (OpenAI)'
         ),
         'gemini-fast' => array(
             'provider' => 'pollinations',
-            'name'     => 'Gemini Fast (Google Gemini 2.5 Flash Lite) – Fast & Free Credits'
+            'name'     => 'Gemini Fast (Google Gemini 2.5 Flash Lite)'
         )
     );
     
@@ -57,24 +56,63 @@ class AICategoryAssigner {
     }
     
     public function add_admin_menu() {
-        // Changed from add_submenu_page to add_menu_page for top-level menu
         add_menu_page(
-            'AI Category Assigner',           // Page title
-            'AI Category Assigner',           // Menu title
-            'manage_options',                  // Capability required
-            'ai-category-assigner',            // Menu slug
-            array($this, 'admin_page_html'),   // Function to display the page
-            'dashicons-tagcloud',              // Icon (using tag cloud icon - appropriate for categories)
-            80                                  // Position (lower number = higher up)
+            'AI Category Assigner',
+            'AI Category Assigner',
+            'manage_options',
+            'ai-category-assigner',
+            array($this, 'admin_page_html'),
+            'dashicons-tagcloud',
+            80
         );
     }
     
+    /**
+     * Sanitization callbacks
+     */
+    public function sanitize_openai_api_key($value) {
+        return sanitize_text_field($value);
+    }
+    
+    public function sanitize_pollinations_api_key($value) {
+        return sanitize_text_field($value);
+    }
+    
+    public function sanitize_target_categories($value) {
+        return sanitize_textarea_field($value);
+    }
+    
+    public function sanitize_ai_model($value) {
+        if (array_key_exists($value, $this->allowed_models)) {
+            return $value;
+        }
+        return 'gpt-4o-mini';
+    }
+    
+    public function sanitize_assign_mode($value) {
+        $allowed = array('all', 'uncategorized');
+        if (in_array($value, $allowed, true)) {
+            return $value;
+        }
+        return 'all';
+    }
+    
     public function init_settings() {
-        register_setting('ai_category_assigner', 'openai_api_key');
-        register_setting('ai_category_assigner', 'pollinations_api_key');
-        register_setting('ai_category_assigner', 'target_categories');
-        register_setting('ai_category_assigner', 'ai_model');
-        register_setting('ai_category_assigner', 'assign_mode');
+        register_setting('ai_category_assigner', 'openai_api_key', array(
+            'sanitize_callback' => array($this, 'sanitize_openai_api_key')
+        ));
+        register_setting('ai_category_assigner', 'pollinations_api_key', array(
+            'sanitize_callback' => array($this, 'sanitize_pollinations_api_key')
+        ));
+        register_setting('ai_category_assigner', 'target_categories', array(
+            'sanitize_callback' => array($this, 'sanitize_target_categories')
+        ));
+        register_setting('ai_category_assigner', 'ai_model', array(
+            'sanitize_callback' => array($this, 'sanitize_ai_model')
+        ));
+        register_setting('ai_category_assigner', 'assign_mode', array(
+            'sanitize_callback' => array($this, 'sanitize_assign_mode')
+        ));
         
         $this->openai_key       = get_option('openai_api_key');
         $this->pollinations_key = get_option('pollinations_api_key');
@@ -88,23 +126,21 @@ class AICategoryAssigner {
             return;
         }
         
-        if (isset($_GET['settings-updated'])) {
-            add_settings_error('ai_category_messages', 'ai_category_message', 'Settings Saved', 'updated');
-        }
-        
         settings_errors('ai_category_messages');
         ?>
         <div class="wrap">
-            <h1>🚀 AI Category Assigner</h1>
+            <h1>AI Category Assigner</h1>
             
-            <!-- Cost‑effectiveness note -->
             <div class="notice notice-info">
-                <p><strong>💡 Why these models?</strong> We've hand‑picked the most effective and affordable AI models for categorization. Using larger models would be overkill – these three give you the best balance of speed, accuracy, and cost.</p>
+                <p>
+                    This plugin uses external AI services to analyze post titles and assign the most relevant category from a predefined list.
+                    Larger models are not required for this task, as title-based categorization is lightweight.
+                </p>
             </div>
             
             <!-- Settings Form -->
             <div class="card" style="max-width: 800px;">
-                <h2>⚙️ Settings</h2>
+                <h2>Settings</h2>
                 <form method="post" action="options.php">
                     <?php settings_fields('ai_category_assigner'); ?>
                     
@@ -114,25 +150,29 @@ class AICategoryAssigner {
                                 <label for="openai_api_key">OpenAI API Key</label>
                             </th>
                             <td>
-                                <input type="password" 
-                                       id="openai_api_key" 
-                                       name="openai_api_key" 
-                                       value="<?php echo esc_attr($this->openai_key); ?>" 
+                                <input type="password"
+                                       id="openai_api_key"
+                                       name="openai_api_key"
+                                       value="<?php echo esc_attr($this->openai_key); ?>"
                                        class="regular-text" />
-                                <p class="description">Required only if you use an OpenAI model. <a href="https://platform.openai.com/api-keys" target="_blank">Get your OpenAI API key</a></p>
+                                <p class="description">
+                                    Required only when using an OpenAI-based model.
+                                </p>
                             </td>
                         </tr>
                         <tr>
                             <th scope="row">
-                                <label for="pollinations_api_key">Pollinations.ai API Key</label>
+                                <label for="pollinations_api_key">Pollinations API Key</label>
                             </th>
                             <td>
-                                <input type="password" 
-                                       id="pollinations_api_key" 
-                                       name="pollinations_api_key" 
-                                       value="<?php echo esc_attr($this->pollinations_key); ?>" 
+                                <input type="password"
+                                       id="pollinations_api_key"
+                                       name="pollinations_api_key"
+                                       value="<?php echo esc_attr($this->pollinations_key); ?>"
                                        class="regular-text" />
-                                <p class="description">Required only if you use the Gemini Fast model. <a href="https://enter.pollinations.ai" target="_blank">Get your Pollinations API key (free credits included)</a></p>
+                                <p class="description">
+                                    Required only when using the Gemini Fast model.
+                                </p>
                             </td>
                         </tr>
                         <tr>
@@ -142,15 +182,14 @@ class AICategoryAssigner {
                             <td>
                                 <select id="ai_model" name="ai_model" class="regular-text">
                                     <?php foreach ($this->allowed_models as $model_value => $model_info): ?>
-                                        <option value="<?php echo esc_attr($model_value); ?>" 
-                                                <?php selected($this->model, $model_value); ?>>
+                                        <option value="<?php echo esc_attr($model_value); ?>"
+                                            <?php selected($this->model, $model_value); ?>>
                                             <?php echo esc_html($model_info['name']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <p class="description">Choose the AI model that fits your needs. The API key for the corresponding provider must be entered above.</p>
-                                <p class="description" style="color: #d63638; font-weight: bold; margin-top: 8px;">
-                                    ⚠️ Important: GPT models (OpenAI) require the OpenAI API key; Gemini Fast (Pollinations) requires the Pollinations API key.
+                                <p class="description">
+                                    Select the AI provider to use. The corresponding API key must be configured above.
                                 </p>
                             </td>
                         </tr>
@@ -162,15 +201,13 @@ class AICategoryAssigner {
                                 <fieldset>
                                     <label>
                                         <input type="radio" name="assign_mode" value="all" <?php checked($this->assign_mode, 'all'); ?>>
-                                        <strong>All posts</strong> – Assign categories to every post, replacing existing categories.
-                                    </label>
-                                    <br>
+                                        Assign categories to all posts (existing categories will be replaced).
+                                    </label><br>
                                     <label>
                                         <input type="radio" name="assign_mode" value="uncategorized" <?php checked($this->assign_mode, 'uncategorized'); ?>>
-                                        <strong>Only uncategorized posts</strong> – Only assign categories to posts that currently have no categories OR only the default "Uncategorized" category. Posts with other categories will be skipped.
+                                        Assign categories only to uncategorized posts.
                                     </label>
                                 </fieldset>
-                                <p class="description">Choose whether to process all posts or only those without meaningful categories.</p>
                             </td>
                         </tr>
                         <tr>
@@ -178,13 +215,13 @@ class AICategoryAssigner {
                                 <label for="target_categories">Target Categories</label>
                             </th>
                             <td>
-                                <textarea 
-                                    id="target_categories" 
-                                    name="target_categories" 
-                                    rows="5" 
-                                    class="large-text" 
-                                    placeholder="Enter categories separated by commas&#10;Example: Technology, Business, Health, Lifestyle, Education"><?php echo esc_textarea($this->categories); ?></textarea>
-                                <p class="description">Enter the categories you want to assign (comma‑separated). <strong>Case‑insensitive matching</strong> – "technology", "Technology", and "TECHNOLOGY" will all match.</p>
+                                <textarea id="target_categories"
+                                          name="target_categories"
+                                          rows="5"
+                                          class="large-text"><?php echo esc_textarea($this->categories); ?></textarea>
+                                <p class="description">
+                                    Enter category names separated by commas. Matching is case-insensitive.
+                                </p>
                             </td>
                         </tr>
                     </table>
@@ -193,7 +230,7 @@ class AICategoryAssigner {
                 </form>
             </div>
             
-            <!-- Posts Table and Controls -->
+            <!-- Posts Table and Controls (unchanged) -->
             <div class="card" style="max-width: 1200px;">
                 <h2>📝 Posts Management</h2>
                 
@@ -285,9 +322,9 @@ class AICategoryAssigner {
                 
                 // Model names for display (sync with PHP)
                 const modelNames = {
-                    'gpt-4o-mini': 'GPT‑4o Mini (OpenAI) – Fast & Cost‑Effective',
-                    'gpt-4.1-mini': 'GPT‑4.1 Mini (OpenAI) – Latest Mini Model',
-                    'gemini-fast': 'Gemini Fast (Google Gemini 2.5 Flash Lite) – Fast & Free Credits'
+                    'gpt-4o-mini': 'GPT-4o Mini (OpenAI)',
+                    'gpt-4.1-mini': 'GPT-4.1 Mini (OpenAI)',
+                    'gemini-fast': 'Gemini Fast (Google Gemini 2.5 Flash Lite)'
                 };
                 
                 updateModelInfo();
@@ -313,7 +350,7 @@ class AICategoryAssigner {
                         type: 'POST',
                         data: {
                             action: 'get_all_posts',
-                            nonce: '<?php echo wp_create_nonce("get_all_posts_nonce"); ?>'
+                            nonce: <?php echo wp_json_encode( wp_create_nonce( 'get_all_posts_nonce' ) ); ?>
                         },
                         success: function(response) {
                             $('#loading-spinner').hide();
@@ -388,7 +425,7 @@ class AICategoryAssigner {
                         data: {
                             action: 'assign_categories_ai',
                             post_ids: batchPosts.map(post => post.ID),
-                            nonce: '<?php echo wp_create_nonce("assign_categories_nonce"); ?>'
+                            nonce: <?php echo wp_json_encode( wp_create_nonce( 'assign_categories_nonce' ) ); ?>
                         },
                         success: function(response) {
                             if (response.success) {
