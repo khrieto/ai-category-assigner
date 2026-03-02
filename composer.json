@@ -1,0 +1,9 @@
+{
+    "name": "khrieto/ai-category-assigner",
+    "description": "WordPress plugin to assign categories using AI",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.2"
+    },
+    "license": "GPL-2.0-or-later"
+}
