@@ -10,9 +10,10 @@ Automatically assign categories to your WordPress posts using AI (OpenAI or Poll
 ## 📥 Download
 
 ### For WordPress Users
-**[⬇️ Download AI.Category.Assigner.zip](https://github.com/khrieto/ai-category-assigner/releases/download/v2.0/AI.Category.Assigner.zip)**
+  [Download Plugin (ZIP)](https://github.com/khrieto/ai-category-assigner/releases/download/v2.0/ai-category-assigner.zip)
+- Ready-to-install WordPress plugin
 - Clean plugin file (ready to install)
-- Size: ~7KB
+- Size: ~331KB
 - Upload via WordPress Admin → Plugins → Add New → Upload Plugin
 
 ### For Developers
