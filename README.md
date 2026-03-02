@@ -119,3 +119,28 @@ The plugin matches the suggested category to your existing WordPress categories.
 2. Keep your category list manageable (5-20 categories works best)
 3. Test with a small batch first before processing all posts
 4. The "uncategorized only" mode is great for new posts
+
+## 📊 Performance
+
+- Processes 10 posts per batch
+- 500ms delay between batches to respect API limits
+- Real-time progress tracking
+
+## 🤝 Support
+
+GitHub: [https://github.com/khrieto/ai-category-assigner](https://github.com/khrieto/ai-category-assigner)
+
+## 📄 License
+
+GPL v2 or later
+
+## 🙏 Credits
+
+- OpenAI for GPT models
+- Pollinations.ai for Gemini Fast API access
+- Google for Gemini AI technology
+
+---
+
+**Version:** 2.0  
+**Last Updated:** March 2026
