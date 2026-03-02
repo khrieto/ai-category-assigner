@@ -7,6 +7,20 @@ Automatically assign categories to your WordPress posts using AI (OpenAI or Poll
 ![License](https://img.shields.io/badge/License-GPLv2-green)
 ![GitHub stars](https://img.shields.io/github/stars/khrieto/ai-category-assigner?style=social)
 
+## 📥 Download
+
+### For WordPress Users
+**[⬇️ Download AI.Category.Assigner.zip](https://github.com/khrieto/ai-category-assigner/releases/download/v2.0/AI.Category.Assigner.zip)**
+- Clean plugin file (ready to install)
+- Size: ~7KB
+- Upload via WordPress Admin → Plugins → Add New → Upload Plugin
+
+### For Developers
+- [Full Source Code (ZIP)](https://github.com/khrieto/ai-category-assigner/archive/refs/tags/v2.0.zip)
+- [Browse Repository](https://github.com/khrieto/ai-category-assigner)
+
+---
+
 ## 🚀 Features
 
 - **Multiple AI Models Support:**
