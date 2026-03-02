@@ -1,0 +1,19 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.sublime-*
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# WordPress specific
+wp-config.php
+wp-content/advanced-cache.php
+wp-content/backup-db/
+wp-content/upgrade/
+wp-content/uploads/
