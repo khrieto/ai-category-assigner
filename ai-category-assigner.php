@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AI Category Assigner
  * Plugin URI:  https://github.com/khrieto/ai-category-assigner
- * Description: Automatically assign categories to your posts using AI (OpenAI or Pollinations). Supports the most cost‑effective models: GPT‑4o Mini, GPT‑4.1 Mini, and Gemini Fast (Google Gemini 2.5 Flash Lite).
+ * Description: Automatically assign categories to your wordpress posts using AI (OpenAI or Pollinations). Supports the most cost‑effective models: GPT‑4o Mini, GPT‑4.1 Mini, and Gemini Fast (Google Gemini 2.5 Flash Lite).
  * Version:     2.0
  * Author:      Khrieto Moirangthem
  * Author URI:  https://github.com/khrieto
