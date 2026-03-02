@@ -100,3 +100,22 @@ To avoid hitting API rate limits and to prevent server timeouts.
 
 ### What if the AI suggests a category that doesn't exist?
 The plugin matches the suggested category to your existing WordPress categories. If no match is found, the post is marked with an error.
+
+## 🐛 Troubleshooting
+
+**"API key not set" error**
+- Ensure you've saved the correct API key for your selected model
+
+**"Category not found" error**
+- Make sure the category exists in WordPress
+- Check that the category name is in your target categories list
+
+**No posts loading**
+- Verify you have published posts
+
+## 💡 Tips for Best Results
+
+1. Use clear category names that are distinct from each other
+2. Keep your category list manageable (5-20 categories works best)
+3. Test with a small batch first before processing all posts
+4. The "uncategorized only" mode is great for new posts
