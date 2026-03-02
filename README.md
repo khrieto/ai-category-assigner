@@ -83,3 +83,20 @@ Click **"Assign Categories to All Posts"** to begin the AI categorization proces
 ### Step 4: Review Results
 - Successfully categorized posts show a green category badge
 - Failed posts show an error message in red
+
+## ❓ Frequently Asked Questions
+
+### Do I need both API keys?
+No, only the key corresponding to your chosen model.
+
+### What happens to existing categories?
+They are replaced. Use "Only uncategorized posts" mode to skip already categorized posts.
+
+### Can I undo changes?
+No, changes are permanent. Always back up your database before processing large batches.
+
+### Why are posts processed in batches?
+To avoid hitting API rate limits and to prevent server timeouts.
+
+### What if the AI suggests a category that doesn't exist?
+The plugin matches the suggested category to your existing WordPress categories. If no match is found, the post is marked with an error.
